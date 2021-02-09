@@ -27,7 +27,7 @@ const cords = {
   g: '<path d="M24.973 9.937q0-1.562-.649-2.421-.64-.86-1.804-.86-1.157 0-1.805.86-.64.859-.64 2.421 0 1.555.64 2.415.648.859 1.805.859 1.164 0 1.804-.86.649-.859.649-2.414zm1.437 3.391q0 2.234-.992 3.32-.992 1.094-3.04 1.094-.757 0-1.429-.117-.672-.11-1.304-.344v-1.398q.632.344 1.25.508.617.164 1.257.164 1.414 0 2.118-.743.703-.734.703-2.226v-.711q-.446.773-1.141 1.156-.695.383-1.664.383-1.61 0-2.594-1.227-.984-1.226-.984-3.25 0-2.03.984-3.257.985-1.227 2.594-1.227.969 0 1.664.383t1.14 1.156V5.664h1.438z"/>',
   h: '<path d="M26.164 9.133v5.281h-1.437V9.18q0-1.243-.485-1.86-.484-.617-1.453-.617-1.164 0-1.836.742-.672.742-.672 2.024v4.945h-1.445V2.258h1.445v4.765q.516-.789 1.211-1.18.703-.39 1.617-.39 1.508 0 2.282.938.773.93.773 2.742z"/>',
 }
-const renderSVG = (board, whiteBottom) => {
+const renderSVG = (board, whiteBottom, marks = []) => {
   const svgElements = []
 
   board.squares.map((square) => {
@@ -36,7 +36,11 @@ const renderSVG = (board, whiteBottom) => {
     const y = ((whiteBottom ? square.rank : 9 - square.rank) - 1) * size + offset
     const color = (fileNumber + square.rank) % 2 ? '#f0d9b5' : '#b58863'
     svgElements.push(`<rect x="${x}" y="${y}" width="${size}" height="${size}" class="square dark a1" stroke="none" fill="${color}"/>`)
-    // svgElements.push(`<circle cx="${x  + 45 / 2}" cy="${y + 45 / 2}" r="7" fill="#aaa23b"/>`)
+
+    if (marks.includes(`${square.file}${square.rank}`)) {
+      svgElements.push(`<circle cx="${x  + 45 / 2}" cy="${y + 45 / 2}" r="7" fill="#aaa23b"/>`)
+    }
+
     const { piece } = square
     if (!piece) {
       return
@@ -80,7 +84,7 @@ app.get('/:fen.jpeg', (req, res) => {
 
   res.contentType('image/jpeg')
 
-  const svg = renderSVG(Board.load(fen), whiteBottom)
+  const svg = renderSVG(Board.load(fen), whiteBottom, mark)
   const canvas = new fabric.Canvas()
 
   canvas.setHeight(size)
