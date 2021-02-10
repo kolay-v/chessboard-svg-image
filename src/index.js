@@ -44,8 +44,13 @@ const renderSVG = (board, {
 
     if (piece) {
       svgElements.push(`<use xlink:href="#${piece.side.name}-${piece.type}" transform="translate(${x}, ${y})"/>`)
-    } else if (marks.includes(squareId)) {
+    }
+    if (marks.includes(squareId)) {
+      if (piece) {
+        svgElements.push(`<use xlink:href="#xx" transform="translate(${x}, ${y})"/>`)
+      } else {
       svgElements.push(`<circle cx="${x + squareSize / 2}" cy="${y + squareSize / 2}" r="${marksSize}" fill="#${marksColor}"/>`)
+      }
     }
   }
 
@@ -53,8 +58,8 @@ const renderSVG = (board, {
   const vertical = Array.from({ length: 8 }, (item, idx) => 8 - idx)
 
   for (let i = 0; i < 8; i += 1) {
-    const file = horizontal[whiteBottom ? 8 - i - 1 : i]
-    const rank = vertical[whiteBottom ? 8 - i - 1 : i]
+    const file = horizontal[whiteBottom ? i : 8 - i - 1]
+    const rank = vertical[whiteBottom ? i : 8 - i - 1]
 
     svgElements.push(`<text transform="translate(${BOARD_PADDING + squareSize / 2 + i * squareSize - 3}, 10) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
     svgElements.push(`<text transform="translate(${squareSize + i * squareSize - 10}, ${squareSize * 8 + BOARD_PADDING * 2 - 3}) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
