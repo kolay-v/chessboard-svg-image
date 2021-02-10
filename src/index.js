@@ -1,15 +1,17 @@
-/* eslint-disable id-length,id-match */
+/* eslint-disable id-length, id-match */
+
 const fs = require('fs')
 const express = require('express')
-const { Board } = require('chess/dist/board')
 const { fabric } = require('fabric')
+const { Board } = require('chess/dist/board')
 
 const app = express()
 const defaultSvg = fs.readFileSync('board.svg', { encoding: 'utf-8' })
-const size = 45
-const offset = 15
-const files = 'abcdefgh'
-const cords = {
+
+const SQUARE_SIZE = 45
+const BOARD_PADDING = 15
+const FILES = 'abcdefgh'
+const COORDINATES = {
   1: '<path d="M6.754 26.996h2.578v-8.898l-2.805.562v-1.437l2.79-.563h1.578v10.336h2.578v1.328h-6.72z"/>',
   2: '<path d="M8.195 26.996h5.508v1.328H6.297v-1.328q.898-.93 2.445-2.492 1.555-1.57 1.953-2.024.758-.851 1.055-1.437.305-.594.305-1.164 0-.93-.657-1.516-.648-.586-1.695-.586-.742 0-1.57.258-.82.258-1.758.781v-1.593q.953-.383 1.781-.578.828-.196 1.516-.196 1.812 0 2.89.906 1.079.907 1.079 2.422 0 .72-.274 1.368-.265.64-.976 1.515-.196.227-1.243 1.313-1.046 1.078-2.953 3.023z"/>',
   3: '<path d="M11.434 22.035q1.132.242 1.765 1.008.64.766.64 1.89 0 1.727-1.187 2.672-1.187.946-3.375.946-.734 0-1.515-.149-.774-.14-1.602-.43V26.45q.656.383 1.438.578.78.196 1.632.196 1.485 0 2.258-.586.782-.586.782-1.703 0-1.032-.727-1.61-.719-.586-2.008-.586h-1.36v-1.297h1.423q1.164 0 1.78-.46.618-.47.618-1.344 0-.899-.64-1.375-.633-.485-1.82-.485-.65 0-1.391.141-.743.14-1.633.437V16.95q.898-.25 1.68-.375.788-.125 1.484-.125 1.797 0 2.844.82 1.046.813 1.046 2.204 0 .968-.554 1.64-.555.664-1.578.922z"/>',
@@ -28,65 +30,66 @@ const cords = {
   h: '<path d="M26.164 9.133v5.281h-1.437V9.18q0-1.243-.485-1.86-.484-.617-1.453-.617-1.164 0-1.836.742-.672.742-.672 2.024v4.945h-1.445V2.258h1.445v4.765q.516-.789 1.211-1.18.703-.39 1.617-.39 1.508 0 2.282.938.773.93.773 2.742z"/>',
 }
 
-const renderSVG = (board, whiteBottom, marks) => {
+const renderSVG = (board, {
+  whiteBottom = true,
+  marks = [],
+  marksColor = 'aaa23b',
+  marksSize = '7',
+}) => {
   const svgElements = []
 
-  board.squares.map((square) => {
-    const fileNumber = files.indexOf(square.file) + 1
-    const x = ((whiteBottom ? fileNumber : 9 - fileNumber) - 1) * size + offset
-    const y = ((whiteBottom ? square.rank : 9 - square.rank) - 1) * size + offset
-    const color = (fileNumber + square.rank) % 2 ? '#f0d9b5' : '#b58863'
-    svgElements.push(`<rect x="${x}" y="${y}" width="${size}" height="${size}" class="square dark a1" stroke="none" fill="${color}"/>`)
+  for (let i = 0; i < board.squares.length; i += 1) {
+    const { file, rank, piece } = board.squares[i]
+    const fileNumber = FILES.indexOf(file) + 1
+    const x = ((whiteBottom ? 9 - fileNumber : fileNumber) - 1) * SQUARE_SIZE + BOARD_PADDING
+    const y = ((whiteBottom ? rank : 9 - rank) - 1) * SQUARE_SIZE + BOARD_PADDING
+    const color = (fileNumber + rank) % 2 ? '#f0d9b5' : '#b58863'
+    const squareId = `${file}${rank}`
 
+    svgElements.push(`<rect x="${x}" y="${y}" width="${SQUARE_SIZE}" height="${SQUARE_SIZE}" class="square ${squareId}" stroke="none" fill="${color}"/>`)
 
-
-    const { piece } = square
     if (piece) {
       svgElements.push(`<use xlink:href="#${piece.side.name}-${piece.type}" transform="translate(${x}, ${y})"/>`)
-    } else if (marks.includes(`${files[9 - fileNumber - 1]}${9 - square.rank}`)) {
-      svgElements.push(`<circle cx="${x + 45 / 2}" cy="${y + 45 / 2}" r="7" fill="#aaa23b"/>`)
+    } else if (marks.includes(squareId)) {
+      svgElements.push(`<circle cx="${x + SQUARE_SIZE / 2}" cy="${y + SQUARE_SIZE / 2}" r="${marksSize}" fill="#${marksColor}"/>`)
     }
-  })
-
-  const horizontal = files.split('')
-  const vertical = Array.from({ length: 8 }, (item, idx) => idx + 1)
-
-  if (whiteBottom) {
-    vertical.reverse()
-  } else {
-    horizontal.reverse()
   }
 
-  horizontal.forEach((file, i) => {
-    svgElements.push(`<g transform="translate(${20 + i * size}, 0) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${cords[file]}</g>`)
-    svgElements.push(`<g transform="translate(${20 + i * size}, 375) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${cords[file]}</g>`)
-  })
+  const horizontal = FILES.split('')
+  const vertical = Array.from({ length: 8 }, (item, idx) => 8 - idx)
 
-  vertical.forEach((rank, i) => {
-    svgElements.push(`<g transform="translate(0, ${20 + i * size}) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${cords[rank]}</g>`)
-    svgElements.push(`<g transform="translate(375, ${20 + i * size}) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${cords[rank]}</g>`)
-  })
-  return defaultSvg.replace('{{board}}', svgElements.join('\n'))
+  for (let i = 0; i < 8; i += 1) {
+    const file = horizontal[whiteBottom ? 8 - i - 1 : i]
+    const rank = vertical[whiteBottom ? 8 - i - 1 : i]
+
+    svgElements.push(`<g transform="translate(${20 + i * SQUARE_SIZE}, 0) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${COORDINATES[file]}</g>`)
+    svgElements.push(`<g transform="translate(${20 + i * SQUARE_SIZE}, ${SQUARE_SIZE * 8 + BOARD_PADDING}) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${COORDINATES[file]}</g>`)
+
+    svgElements.push(`<g transform="translate(0, ${20 + i * SQUARE_SIZE}) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${COORDINATES[rank]}</g>`)
+    svgElements.push(`<g transform="translate(${SQUARE_SIZE * 8 + BOARD_PADDING}, ${20 + i * SQUARE_SIZE}) scale(0.75 0.75)" fill="#e5e5e5" stroke="#e5e5e5">${COORDINATES[rank]}</g>`)
+  }
+
+  return defaultSvg.split('{{board}}').join(svgElements.join(''))
 }
 
 app.get('/:fen.jpeg', (req, res) => {
-  let { rotate, marks } = req.query
-  let { fen } = req.params
-  if (!marks) {
-    marks = ''
-  }
-  marks = marks.split(',')
+  console.time('gen time')
+  const {
+    rotate = 0,
+    marks: marksList = '',
+    marks_color: marksColor,
+    marks_size: marksSize,
+  } = req.query
+  const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
 
-  if (!fen) {
-    fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR'
-  }
+  const marks = marksList.split(',')
 
-  const size = 512
-  const whiteBottom = rotate !== 'true'
+  const size = 1024
+  const whiteBottom = !!Number(rotate)
 
   res.contentType('image/jpeg')
 
-  const svg = renderSVG(Board.load(fen), whiteBottom, marks)
+  const svg = renderSVG(Board.load(fen), { whiteBottom, marks, marksColor, marksSize })
   const canvas = new fabric.Canvas()
 
   canvas.setHeight(size)
@@ -104,7 +107,8 @@ app.get('/:fen.jpeg', (req, res) => {
     canvas.add(obj)
     canvas.renderAll()
     canvas.createJPEGStream().pipe(res)
+    console.timeEnd('gen time')
   })
 })
 
-app.listen(3000)
+app.listen(3001)
