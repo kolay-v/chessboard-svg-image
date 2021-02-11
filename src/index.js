@@ -5,52 +5,66 @@ const express = require('express')
 const { StaticCanvas, loadSVGFromString, util: { groupSVGElements } } = require('fabric').fabric
 const { Board } = require('chess/dist/board')
 
-const app = express()
-const stubSvg = fs.readFileSync('stub.svg', { encoding: 'utf-8' })
+const {
+  FILES,
+  BG_COLOR,
+  BOARD_SIZE,
+  MARKS_SIZE,
+  TEXT_COLOR,
+  CROSS_COLOR,
+  MARKS_COLOR,
+  SQUARE_SIZE,
+  B_CELL_COLOR,
+  W_CELL_COLOR,
+  BOARD_PADDING,
+} = require('./config')
 
-const W_CELL_COLOR = 'f0d9b5'
-const B_CELL_COLOR = 'b58863'
-const BG_COLOR = '212121'
-const TEXT_COLOR = 'e5e5e5'
-const MARKS_COLOR = 'aaa23b'
-const MARKS_SIZE = 7
-const BOARD_SIZE = 512
-const SQUARE_SIZE = 45
-const BOARD_PADDING = 15
-const FILES = 'abcdefgh'
+const {
+  makeDot,
+  makeCross,
+  makePiece,
+  makeScale,
+  makeSquare,
+} = require('./svg')
+
+const app = express()
+const stubSvg = fs.readFileSync('stubs/stub.svg', { encoding: 'utf-8' })
 
 const renderSVG = (board, {
   marks = [],
   bgColor,
   marksSize,
   textColor,
+  crossColor,
   marksColor,
   bCellColor,
   wCellColor,
   squareSize,
   whiteBottom,
+  boardPadding,
 }) => {
   const svgElements = []
 
   for (let i = 0; i < board.squares.length; i += 1) {
     const { file, rank, piece } = board.squares[i]
     const fileNumber = FILES.indexOf(file) + 1
-    const x = ((whiteBottom ? 9 - fileNumber : fileNumber) - 1) * squareSize + BOARD_PADDING
-    const y = ((whiteBottom ? rank : 9 - rank) - 1) * squareSize + BOARD_PADDING
+    const x = ((whiteBottom ? 9 - fileNumber : fileNumber) - 1) * squareSize + boardPadding
+    const y = ((whiteBottom ? rank : 9 - rank) - 1) * squareSize + boardPadding
     const color = (fileNumber + rank) % 2 ? wCellColor : bCellColor
     const squareId = `${file}${rank}`
 
-    svgElements.push(`<rect x="${x}" y="${y}" width="${squareSize}" height="${squareSize}" class="square ${squareId}" stroke="none" fill="#${color}"/>`)
+    svgElements.push(makeSquare({ x, y, squareSize, squareId, color }))
 
     if (piece) {
-      svgElements.push(`<use xlink:href="#${piece.side.name}-${piece.type}" transform="translate(${x}, ${y})"/>`)
+      svgElements.push(makePiece({ x, y, piece }))
     }
+
     if (marks.includes(squareId)) {
-      if (piece) {
-        svgElements.push(`<use xlink:href="#xx" transform="translate(${x}, ${y})"/>`)
-      } else {
-      svgElements.push(`<circle cx="${x + squareSize / 2}" cy="${y + squareSize / 2}" r="${marksSize}" fill="#${marksColor}"/>`)
-      }
+      svgElements.push(
+        piece
+          ? makeCross({ x, y, crossColor })
+          : makeDot({ x, y, squareSize, marksSize, marksColor }),
+      )
     }
   }
 
@@ -58,17 +72,21 @@ const renderSVG = (board, {
   const vertical = Array.from({ length: 8 }, (item, idx) => 8 - idx)
 
   for (let i = 0; i < 8; i += 1) {
-    const file = horizontal[whiteBottom ? i : 8 - i - 1]
-    const rank = vertical[whiteBottom ? i : 8 - i - 1]
+    const file = horizontal[whiteBottom ? 8 - i - 1 : i]
+    const rank = vertical[whiteBottom ? 8 - i - 1 : i]
 
-    svgElements.push(`<text transform="translate(${BOARD_PADDING + squareSize / 2 + i * squareSize - 3}, 10) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
-    svgElements.push(`<text transform="translate(${squareSize + i * squareSize - 10}, ${squareSize * 8 + BOARD_PADDING * 2 - 3}) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
-
-    svgElements.push(`<text transform="translate(4, ${squareSize + i * squareSize - 3}) scale(.7)" fill="#${textColor}">${rank}</text>`)
-    svgElements.push(`<text transform="translate(${squareSize * 8 + BOARD_PADDING * 2 - 10}, ${squareSize + i * squareSize - 3}) scale(.7)" fill="#${textColor}">${rank}</text>`)
+    svgElements.push(makeScale({
+      i,
+      file,
+      rank,
+      boardPadding,
+      squareSize,
+      textColor,
+    }))
   }
 
-  return stubSvg.split('{{bg}}').join(bgColor).split('{{board}}').join(svgElements.join(''))
+  return stubSvg.split('{{bg}}').join(bgColor)
+    .split('{{board}}').join(svgElements.join(''))
 }
 
 app.get('/:fen.jpeg', (req, res) => {
@@ -77,14 +95,15 @@ app.get('/:fen.jpeg', (req, res) => {
     rotate = 0,
     marks: marksList = '',
     bg_color: bgColor = BG_COLOR,
-    marks_color: marksColor = MARKS_COLOR,
-    marks_size: marksSize = MARKS_SIZE,
     board_size: boardSize = BOARD_SIZE,
+    marks_size: marksSize = MARKS_SIZE,
     text_color: textColor = TEXT_COLOR,
+    cross_color: crossColor = CROSS_COLOR,
+    marks_color: marksColor = MARKS_COLOR,
     square_size: squareSize = SQUARE_SIZE,
-    board_padding: boardPadding = BOARD_PADDING,
-    w_cell_color: wCellColor = W_CELL_COLOR,
     b_cell_color: bCellColor = B_CELL_COLOR,
+    w_cell_color: wCellColor = W_CELL_COLOR,
+    board_padding: boardPadding = BOARD_PADDING,
   } = req.query
   const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
 
@@ -98,6 +117,7 @@ app.get('/:fen.jpeg', (req, res) => {
     bgColor,
     marksSize,
     textColor,
+    crossColor,
     marksColor,
     squareSize,
     bCellColor,
