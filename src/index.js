@@ -19,8 +19,16 @@ const {
   BOARD_PADDING,
 } = require('./config')
 
+const {
+  makeDot,
+  makeCross,
+  makePiece,
+  makeScale,
+  makeSquare,
+} = require('./svg')
+
 const app = express()
-const stubSvg = fs.readFileSync('stub.svg', { encoding: 'utf-8' })
+const stubSvg = fs.readFileSync('stubs/stub.svg', { encoding: 'utf-8' })
 
 const renderSVG = (board, {
   marks = [],
@@ -45,16 +53,18 @@ const renderSVG = (board, {
     const color = (fileNumber + rank) % 2 ? wCellColor : bCellColor
     const squareId = `${file}${rank}`
 
-    svgElements.push(`<rect x="${x}" y="${y}" width="${squareSize}" height="${squareSize}" class="square ${squareId}" stroke="none" fill="#${color}"/>`)
+    svgElements.push(makeSquare({ x, y, squareSize, squareId, color }))
 
     if (piece) {
-      svgElements.push(`<use xlink:href="#${piece.side.name}-${piece.type}" transform="translate(${x}, ${y})"/>`)
+      svgElements.push(makePiece({ x, y, piece }))
     }
 
     if (marks.includes(squareId)) {
-      svgElements.push(piece
-        ? `<g transform="translate(${x}, ${y})"><path d="M35.865 9.135a1.89 1.89 0 0 1 0 2.673L25.173 22.5l10.692 10.692a1.89 1.89 0 0 1 0 2.673 1.89 1.89 0 0 1-2.673 0L22.5 25.173 11.808 35.865a1.89 1.89 0 0 1-2.673 0 1.89 1.89 0 0 1 0-2.673L19.827 22.5 9.135 11.808a1.89 1.89 0 0 1 0-2.673 1.89 1.89 0 0 1 2.673 0L22.5 19.827 33.192 9.135a1.89 1.89 0 0 1 2.673 0z" fill="#${crossColor}" stroke="#000" stroke-width="1.688"/></g>`
-        : `<circle cx="${x + squareSize / 2}" cy="${y + squareSize / 2}" r="${marksSize}" fill="#${marksColor}"/>`)
+      svgElements.push(
+        piece
+          ? makeCross({ x, y, crossColor })
+          : makeDot({ x, y, squareSize, marksSize, marksColor }),
+      )
     }
   }
 
@@ -65,14 +75,18 @@ const renderSVG = (board, {
     const file = horizontal[whiteBottom ? 8 - i - 1 : i]
     const rank = vertical[whiteBottom ? 8 - i - 1 : i]
 
-    svgElements.push(`<text transform="translate(${boardPadding + squareSize / 2 + i * squareSize - 3}, 10) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
-    svgElements.push(`<text transform="translate(${squareSize + i * squareSize - 10}, ${squareSize * 8 + boardPadding * 2 - 3}) scale(.65)" fill="#${textColor}">${file.toUpperCase()}</text>`)
-
-    svgElements.push(`<text transform="translate(4, ${squareSize + i * squareSize - 3}) scale(.7)" fill="#${textColor}">${rank}</text>`)
-    svgElements.push(`<text transform="translate(${squareSize * 8 + boardPadding * 2 - 10}, ${squareSize + i * squareSize - 3}) scale(.7)" fill="#${textColor}">${rank}</text>`)
+    svgElements.push(makeScale({
+      i,
+      file,
+      rank,
+      boardPadding,
+      squareSize,
+      textColor,
+    }))
   }
 
-  return stubSvg.split('{{bg}}').join(bgColor).split('{{board}}').join(svgElements.join(''))
+  return stubSvg.split('{{bg}}').join(bgColor)
+    .split('{{board}}').join(svgElements.join(''))
 }
 
 app.get('/:fen.jpeg', (req, res) => {

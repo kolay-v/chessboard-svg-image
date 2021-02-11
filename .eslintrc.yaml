@@ -30,12 +30,12 @@ rules:
         - x
         - y
         - e
-  id-match:
-    - error
-    - "^(([A-Za-z0-9]+){2,})|([A-Z][A-Z_0-9]+)$"
-    -
-      properties: false
-      onlyDeclarations: true
+  # id-match:
+  #   - error
+  #   - "^(([A-Za-z0-9]+){2,})|([A-Z][A-Z_0-9]+)$"
+  #   -
+  #     properties: false
+  #     onlyDeclarations: true
   indent:
     - error
     - 2
