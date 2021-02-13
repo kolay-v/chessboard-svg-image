@@ -1,9 +1,10 @@
-/* eslint-disable id-length, id-match */
-
+require('dotenv').config()
 const fs = require('fs')
 const express = require('express')
 const { StaticCanvas, loadSVGFromString, util: { groupSVGElements } } = require('fabric').fabric
 const { Board } = require('chess/dist/board')
+
+const { APP_PORT } = process.env
 
 const {
   FILES,
@@ -105,7 +106,6 @@ const renderSVG = (board, {
 }
 
 app.get('/:fen.jpeg', (req, res) => {
-  console.time(req.url)
   const {
     rotate = 0,
     arrows = [],
@@ -127,6 +127,8 @@ app.get('/:fen.jpeg', (req, res) => {
   const whiteBottom = !!Number(rotate)
 
   res.contentType('image/jpeg')
+
+  console.log(fen)
 
   const svg = renderSVG(Board.load(fen), {
     marks,
@@ -160,8 +162,7 @@ app.get('/:fen.jpeg', (req, res) => {
     canvas.add(obj)
     canvas.renderAll()
     canvas.createJPEGStream().pipe(res)
-    console.timeEnd(req.url)
   })
 })
 
-app.listen(3002)
+app.listen(APP_PORT)
