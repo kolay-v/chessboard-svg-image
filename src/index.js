@@ -84,6 +84,33 @@ const renderSVG = (board, {
       textColor,
     }))
   }
+  const fileTail = 6
+  const rankTail = 6
+  const fileHead = 3
+  const rankHead = 3
+  const xTail = (fileTail + 0.5) * squareSize + boardPadding
+  const yTail = (7.5 - rankTail) * squareSize + boardPadding
+  const xHead = (fileHead + 0.5) * squareSize + boardPadding
+  const yHead = (7.5 - rankHead) * squareSize + boardPadding
+  const dx = xHead - xTail
+  const dy = yHead - yTail
+  const hypot = Math.hypot(dx, dy)
+
+
+  const shaftX = xHead - dx * (squareSize * 0.1 + squareSize * 0.75) / hypot
+  const shaftY = yHead - dy * (squareSize * 0.1 + squareSize * 0.75) / hypot
+
+  const tipX = xHead - dx *squareSize * 0.1 / hypot
+  const tipY = yHead - dy *squareSize * 0.1 / hypot
+
+  svgElements.push(`<line x1="${xTail}" y1="${yTail}" x2="${shaftX}" y2="${shaftY}" stroke-width="${squareSize * 0.2}" stroke="#00FF00"></line>`)
+
+  const marker = [[tipX, tipY],
+    [shaftX + dy * 0.5 * squareSize * 0.75 / hypot,
+    shaftY - dx * 0.5 * squareSize * 0.75 / hypot],
+    [shaftX - dy * 0.5 * squareSize * 0.75 / hypot,
+    shaftY + dx * 0.5 * squareSize * 0.75 / hypot]]
+  svgElements.push(`<polygon points="${marker.map(([x, y]) => `${x},${y}`).join(' ')}" fill="#00FF00"></polygon>`)
 
   return stubSvg.split('{{bg}}').join(bgColor)
     .split('{{board}}').join(svgElements.join(''))
