@@ -46,8 +46,54 @@ const makeScale = ({ i, boardPadding, squareSize, textColor, file, rank }) => `<
   fill="#${textColor}"
 >${rank}</text>`
 
+const makeArrow = ({
+  fromFile,
+  fromRank,
+  toFile,
+  toRank,
+  color = '00ff0080',
+  squareSize,
+  boardPadding,
+}) => {
+  const svgElements = []
+  const fromX = (fromFile + 0.5) * squareSize + boardPadding
+  const fromY = (7.5 - fromRank) * squareSize + boardPadding
+  const toX = (toFile + 0.5) * squareSize + boardPadding
+  const toY = (7.5 - toRank) * squareSize + boardPadding
+  const dx = toX - fromX
+  const dy = toY - fromY
+  const hypot = Math.hypot(dx, dy)
+  const shaftX = toX - dx * (squareSize * 0.1 + squareSize * 0.75) / hypot
+  const shaftY = toY - dy * (squareSize * 0.1 + squareSize * 0.75) / hypot
+
+  svgElements.push(`<line
+  x1="${fromX}"
+  y1="${fromY}"
+  x2="${shaftX}"
+  y2="${shaftY}"
+  stroke-width="${squareSize * 0.2}"
+  stroke="#${color}"
+></line>`)
+
+  const tipX = toX - dx * squareSize * 0.1 / hypot
+  const tipY = toY - dy * squareSize * 0.1 / hypot
+  const marker = [[tipX, tipY],
+    [shaftX + dy * 0.5 * squareSize * 0.75 / hypot,
+    shaftY - dx * 0.5 * squareSize * 0.75 / hypot],
+    [shaftX - dy * 0.5 * squareSize * 0.75 / hypot,
+    shaftY + dx * 0.5 * squareSize * 0.75 / hypot]]
+
+  svgElements.push(`<polygon
+  points="${marker.map(([x, y]) => `${x},${y}`).join(' ')}"
+  fill="#${color}"
+></polygon>`)
+
+  return svgElements
+}
+
 module.exports = {
   makeDot,
+  makeArrow,
   makeCross,
   makePiece,
   makeScale,
