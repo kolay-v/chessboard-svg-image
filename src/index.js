@@ -90,10 +90,10 @@ const renderSVG = (board, {
   if (arrows.length > 0) {
     for (let i = 0; i < arrows.length; i += 1) {
       const arrow = arrows[i].match(
-        /(?<fromFile>[a-h])(?<fromRank>\d)(?<toFile>[a-h])(?<toRank>\d)(?<color>[0-9a-f]{3,8})?/
+        /(?<fromFile>[a-h])(?<fromRank>\d)(?<toFile>[a-h])(?<toRank>\d)(?<color>[0-9a-f]{3,8})?/,
       )
-
-      svgElements.push(makeArrow({ ...arrow, squareSize, boardPadding }))
+      console.log(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
+      svgElements.push(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
     }
   }
 
@@ -105,6 +105,7 @@ app.get('/:fen.jpeg', (req, res) => {
   console.time('gen time')
   const {
     rotate = 0,
+    arrows = [],
     marks: marksList = '',
     bg_color: bgColor = BG_COLOR,
     board_size: boardSize = BOARD_SIZE,
@@ -126,6 +127,7 @@ app.get('/:fen.jpeg', (req, res) => {
 
   const svg = renderSVG(Board.load(fen), {
     marks,
+    arrows,
     bgColor,
     marksSize,
     textColor,
@@ -159,4 +161,4 @@ app.get('/:fen.jpeg', (req, res) => {
   })
 })
 
-app.listen(3001)
+app.listen(3002)

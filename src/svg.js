@@ -55,16 +55,20 @@ const makeArrow = ({
   squareSize,
   boardPadding,
 }) => {
+  const fromIdx = 'abcdefgh'.indexOf(fromFile)
+  const toIdx = 'abcdefgh'.indexOf(toFile)
   const svgElements = []
-  const fromX = (fromFile + 0.5) * squareSize + boardPadding
-  const fromY = (7.5 - fromRank) * squareSize + boardPadding
-  const toX = (toFile + 0.5) * squareSize + boardPadding
-  const toY = (7.5 - toRank) * squareSize + boardPadding
+  const fromX = (fromIdx + 0.5) * squareSize + boardPadding
+  const fromY = (7.5 - fromRank + 1) * squareSize + boardPadding
+  const toX = (toIdx + 0.5) * squareSize + boardPadding
+  const toY = (7.5 - toRank + 1) * squareSize + boardPadding
   const dx = toX - fromX
   const dy = toY - fromY
   const hypot = Math.hypot(dx, dy)
   const shaftX = toX - dx * (squareSize * 0.1 + squareSize * 0.75) / hypot
   const shaftY = toY - dy * (squareSize * 0.1 + squareSize * 0.75) / hypot
+  const tipX = toX - dx * squareSize * 0.1 / hypot
+  const tipY = toY - dy * squareSize * 0.1 / hypot
 
   svgElements.push(`<line
   x1="${fromX}"
@@ -75,20 +79,18 @@ const makeArrow = ({
   stroke="#${color}"
 ></line>`)
 
-  const tipX = toX - dx * squareSize * 0.1 / hypot
-  const tipY = toY - dy * squareSize * 0.1 / hypot
   const marker = [[tipX, tipY],
     [shaftX + dy * 0.5 * squareSize * 0.75 / hypot,
-    shaftY - dx * 0.5 * squareSize * 0.75 / hypot],
+      shaftY - dx * 0.5 * squareSize * 0.75 / hypot],
     [shaftX - dy * 0.5 * squareSize * 0.75 / hypot,
-    shaftY + dx * 0.5 * squareSize * 0.75 / hypot]]
+      shaftY + dx * 0.5 * squareSize * 0.75 / hypot]]
 
   svgElements.push(`<polygon
   points="${marker.map(([x, y]) => `${x},${y}`).join(' ')}"
   fill="#${color}"
 ></polygon>`)
 
-  return svgElements
+  return svgElements.join('')
 }
 
 module.exports = {
