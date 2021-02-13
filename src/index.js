@@ -92,17 +92,20 @@ const renderSVG = (board, {
       const arrow = arrows[i].match(
         /(?<fromFile>[a-h])(?<fromRank>\d)(?<toFile>[a-h])(?<toRank>\d)(?<color>[0-9a-f]{3,8})?/,
       )
-      console.log(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
-      svgElements.push(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
+
+      if (arrow) {
+        svgElements.push(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
+      }
     }
   }
 
-  return stubSvg.split('{{bg}}').join(bgColor)
+  return stubSvg
+    .split('{{bg}}').join(bgColor)
     .split('{{board}}').join(svgElements.join(''))
 }
 
 app.get('/:fen.jpeg', (req, res) => {
-  console.time('gen time')
+  console.time(req.url)
   const {
     rotate = 0,
     arrows = [],
@@ -157,7 +160,7 @@ app.get('/:fen.jpeg', (req, res) => {
     canvas.add(obj)
     canvas.renderAll()
     canvas.createJPEGStream().pipe(res)
-    console.timeEnd('gen time')
+    console.timeEnd(req.url)
   })
 })
 
