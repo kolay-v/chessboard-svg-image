@@ -14,10 +14,8 @@ const {
   TEXT_COLOR,
   CROSS_COLOR,
   MARKS_COLOR,
-  SQUARE_SIZE,
   B_CELL_COLOR,
   W_CELL_COLOR,
-  BOARD_PADDING,
 } = require('./config')
 
 const {
