@@ -1,7 +1,7 @@
 {
   "name": "chessboard-svg-image",
-  "version": "0.0.2",
-  "description": "Microservice render jpeg image of chessboard by FEN.",
+  "version": "0.0.3",
+  "description": "Chess board JPEG image generator microservice",
   "main": "src/index.js",
   "scripts": {
     "lint": "eslint --ext .js src",

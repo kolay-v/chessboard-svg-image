@@ -34,6 +34,7 @@ const stubSvg = fs.readFileSync('stubs/stub.svg', { encoding: 'utf-8' })
 
 const renderSVG = (board, {
   marks = [],
+  scale,
   arrows = [],
   bgColor,
   marksSize,
@@ -59,14 +60,14 @@ const renderSVG = (board, {
     svgElements.push(makeSquare({ x, y, squareSize, squareId, color }))
 
     if (piece) {
-      svgElements.push(makePiece({ x, y, piece }))
+      svgElements.push(makePiece({ x, y, piece, scale }))
     }
 
     if (marks.includes(squareId)) {
       svgElements.push(
         piece
-          ? makeCross({ x, y, crossColor })
-          : makeDot({ x, y, squareSize, marksSize, marksColor }),
+          ? makeCross({ x, y, crossColor, scale })
+          : makeDot({ x, y, squareSize, marksSize, marksColor, scale }),
       )
     }
   }
@@ -101,6 +102,7 @@ const renderSVG = (board, {
   }
 
   return stubSvg
+    .split('{{fullWidth}}').join(squareSize * 8 + boardPadding * 2)
     .split('{{bg}}').join(bgColor)
     .split('{{board}}').join(svgElements.join(''))
 }
@@ -116,22 +118,22 @@ app.get('/:fen.jpeg', (req, res) => {
     text_color: textColor = TEXT_COLOR,
     cross_color: crossColor = CROSS_COLOR,
     marks_color: marksColor = MARKS_COLOR,
-    square_size: squareSize = SQUARE_SIZE,
     b_cell_color: bCellColor = B_CELL_COLOR,
     w_cell_color: wCellColor = W_CELL_COLOR,
-    board_padding: boardPadding = BOARD_PADDING,
   } = req.query
   const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
 
+  const boardPadding = boardSize / 26
+  const squareSize = boardPadding * 3
+  const scale = boardSize / 390
   const marks = marksList.split(',')
   const whiteBottom = !!Number(rotate)
 
   res.contentType('image/jpeg')
 
-  console.log(fen)
-
   const svg = renderSVG(Board.load(fen), {
     marks,
+    scale,
     arrows,
     bgColor,
     marksSize,
@@ -152,6 +154,7 @@ app.get('/:fen.jpeg', (req, res) => {
 
   loadSVGFromString(svg, (objects, info) => {
     const ctx = canvas.getContext('2d')
+    console.log(info)
     const scaleX = info.width ? (boardSize / info.width) : 1
     const scaleY = info.height ? (boardSize / info.height) : 1
 
