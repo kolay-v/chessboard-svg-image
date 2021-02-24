@@ -49,10 +49,11 @@ const renderSVG = (board, {
 
   for (let i = 0; i < board.squares.length; i += 1) {
     const { file, rank, piece } = board.squares[i]
-    const fileNumber = FILES.indexOf(file) + 1
-    const x = ((whiteBottom ? 9 - fileNumber : fileNumber) - 1) * squareSize + boardPadding
-    const y = ((whiteBottom ? rank : 9 - rank) - 1) * squareSize + boardPadding
-    const color = (fileNumber + rank) % 2 ? wCellColor : bCellColor
+    const color = (FILES.indexOf(file) + rank) % 2 ? wCellColor : bCellColor
+    const fileNumber = whiteBottom ? FILES.indexOf(file) : 7 - FILES.indexOf(file)
+    const rankNumber = !whiteBottom ? rank - 1 : 8 - rank
+    const x = fileNumber * squareSize + boardPadding
+    const y = rankNumber * squareSize + boardPadding
     const squareId = `${file}${rank}`
 
     svgElements.push(makeSquare({ x, y, squareSize, squareId, color }))
@@ -74,8 +75,8 @@ const renderSVG = (board, {
   const vertical = Array.from({ length: 8 }, (item, idx) => 8 - idx)
 
   for (let i = 0; i < 8; i += 1) {
-    const file = horizontal[whiteBottom ? 8 - i - 1 : i]
-    const rank = vertical[whiteBottom ? 8 - i - 1 : i]
+    const file = horizontal[whiteBottom ? i : 7 - i]
+    const rank = vertical[whiteBottom ? i : 7 - i]
 
     svgElements.push(makeScale({
       i,
@@ -94,7 +95,12 @@ const renderSVG = (board, {
       )
 
       if (arrow) {
-        svgElements.push(makeArrow({ ...arrow.groups, squareSize, boardPadding }))
+        svgElements.push(makeArrow({
+          ...arrow.groups,
+          squareSize,
+          whiteBottom,
+          boardPadding,
+        }))
       }
     }
   }
@@ -121,11 +127,13 @@ app.get('/:fen.jpeg', (req, res) => {
   } = req.query
   const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
 
-  const boardPadding = boardSize / 26
-  const squareSize = boardPadding * 3
-  const scale = boardSize / 390
+  const paddingPart = 3
+  const boardCoof = 8 * paddingPart + 2
+  const boardPadding = boardSize / boardCoof
+  const squareSize = boardPadding * paddingPart
+  const scale = boardSize / (boardCoof * 15)
   const marks = marksList.split(',')
-  const whiteBottom = !!Number(rotate)
+  const whiteBottom = !Number(rotate)
 
   res.contentType('image/jpeg')
 
@@ -152,7 +160,6 @@ app.get('/:fen.jpeg', (req, res) => {
 
   loadSVGFromString(svg, (objects, info) => {
     const ctx = canvas.getContext('2d')
-    console.log(info)
     const scaleX = info.width ? (boardSize / info.width) : 1
     const scaleY = info.height ? (boardSize / info.height) : 1
 

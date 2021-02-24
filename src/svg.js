@@ -54,10 +54,14 @@ const makeArrow = ({
   toRank,
   color = '00ff0080',
   squareSize,
+  whiteBottom,
   boardPadding,
 }) => {
-  const fromIdx = 'abcdefgh'.indexOf(fromFile)
-  const toIdx = 'abcdefgh'.indexOf(toFile)
+  fromRank = whiteBottom ? fromRank : 9 - fromRank
+  toRank = whiteBottom ? toRank : 9 - toRank
+  const letters = whiteBottom ? 'abcdefgh' : 'hgfedcba'
+  const fromIdx = letters.indexOf(fromFile)
+  const toIdx = letters.indexOf(toFile)
   const svgElements = []
   const fromX = (fromIdx + 0.5) * squareSize + boardPadding
   const fromY = (7.5 - fromRank + 1) * squareSize + boardPadding
@@ -80,11 +84,12 @@ const makeArrow = ({
   stroke="#${color}"
 ></line>`)
 
-  const marker = [[tipX, tipY],
-    [shaftX + dy * 0.5 * squareSize * 0.75 / hypot,
-      shaftY - dx * 0.5 * squareSize * 0.75 / hypot],
-    [shaftX - dy * 0.5 * squareSize * 0.75 / hypot,
-      shaftY + dx * 0.5 * squareSize * 0.75 / hypot]]
+  const coof = 0.5 * squareSize * 0.75 / hypot
+  const marker = [
+    [tipX, tipY],
+    [shaftX + dy * coof, shaftY - dx * coof],
+    [shaftX - dy * coof, shaftY + dx * coof],
+  ]
 
   svgElements.push(`<polygon
   points="${marker.map(([x, y]) => `${x},${y}`).join(' ')}"
