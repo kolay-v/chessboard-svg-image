@@ -113,6 +113,7 @@ const renderSVG = (board, {
 
 app.get('/:fen.jpeg', (req, res) => {
   const {
+    debug = 0,
     rotate = 0,
     arrows = [],
     marks: marksList = '',
@@ -135,8 +136,6 @@ app.get('/:fen.jpeg', (req, res) => {
   const marks = marksList.split(',')
   const whiteBottom = !Number(rotate)
 
-  res.contentType('image/jpeg')
-
   const svg = renderSVG(Board.load(fen), {
     marks,
     scale,
@@ -153,24 +152,34 @@ app.get('/:fen.jpeg', (req, res) => {
     boardPadding,
   })
 
-  const canvas = new StaticCanvas('c', {
-    width: boardSize,
-    height: boardSize,
-  })
+  if (!Number(debug)) {
+    res.contentType('image/jpeg')
 
-  loadSVGFromString(svg, (objects, info) => {
-    const ctx = canvas.getContext('2d')
-    const scaleX = info.width ? (boardSize / info.width) : 1
-    const scaleY = info.height ? (boardSize / info.height) : 1
+    const canvas = new StaticCanvas('c', {
+      width: boardSize,
+      height: boardSize,
+    })
 
-    ctx.scale(scaleX, scaleY)
+    loadSVGFromString(svg, (objects, info) => {
+      const ctx = canvas.getContext('2d')
+      const scaleX = info.width ? (boardSize / info.width) : 1
+      const scaleY = info.height ? (boardSize / info.height) : 1
 
-    const obj = groupSVGElements(objects, info)
+      ctx.scale(scaleX, scaleY)
 
-    canvas.add(obj)
-    canvas.renderAll()
-    canvas.createJPEGStream().pipe(res)
-  })
+      const obj = groupSVGElements(objects, info)
+
+      canvas.add(obj)
+      canvas.renderAll()
+      canvas.createJPEGStream().pipe(res)
+    })
+
+    return true
+  }
+
+  res.contentType('text/html')
+  res.send(svg)
+  res.end()
 })
 
 app.listen(APP_PORT)
