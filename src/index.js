@@ -49,7 +49,7 @@ const renderSVG = (board, {
 
   for (let i = 0; i < board.squares.length; i += 1) {
     const { file, rank, piece } = board.squares[i]
-    const color = (FILES.indexOf(file) + rank) % 2 ? wCellColor : bCellColor
+    const color = (FILES.indexOf(file) + rank) % 2 ? bCellColor : wCellColor
     const fileNumber = whiteBottom ? FILES.indexOf(file) : 7 - FILES.indexOf(file)
     const rankNumber = !whiteBottom ? rank - 1 : 8 - rank
     const x = fileNumber * squareSize + boardPadding
