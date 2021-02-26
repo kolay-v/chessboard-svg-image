@@ -1,3 +1,5 @@
+const { FILES } = require('./config')
+
 const makeSquare = ({ x, y, squareSize, squareId, color }) => `<rect
   x="${x}"
   y="${y}"
@@ -59,17 +61,21 @@ const makeArrow = ({
 }) => {
   fromRank = whiteBottom ? fromRank : 9 - fromRank
   toRank = whiteBottom ? toRank : 9 - toRank
-  const letters = whiteBottom ? 'abcdefgh' : 'hgfedcba'
+  const letters = whiteBottom ? FILES : FILES.split('').reverse().join('')
   const fromIdx = letters.indexOf(fromFile)
   const toIdx = letters.indexOf(toFile)
+
   const svgElements = []
+
   const fromX = (fromIdx + 0.5) * squareSize + boardPadding
   const fromY = (7.5 - fromRank + 1) * squareSize + boardPadding
   const toX = (toIdx + 0.5) * squareSize + boardPadding
   const toY = (7.5 - toRank + 1) * squareSize + boardPadding
   const dx = toX - fromX
   const dy = toY - fromY
+
   const hypot = Math.hypot(dx, dy)
+
   const shaftX = toX - dx * (squareSize * 0.1 + squareSize * 0.75) / hypot
   const shaftY = toY - dy * (squareSize * 0.1 + squareSize * 0.75) / hypot
   const tipX = toX - dx * squareSize * 0.1 / hypot
