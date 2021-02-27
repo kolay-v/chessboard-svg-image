@@ -111,7 +111,7 @@ const renderSVG = (board, {
     .split('{{board}}').join(svgElements.join(''))
 }
 
-app.get('/:fen.jpeg', (req, res) => {
+app.get('/:fen.jpg', (req, res) => {
   const {
     debug = 0,
     rotate = 0,
