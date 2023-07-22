@@ -1,8 +1,8 @@
 /* eslint-disable id-length, id-match */
-
+require('dotenv').config()
 const fs = require('fs')
+const sharp = require('sharp')
 const express = require('express')
-const { StaticCanvas, loadSVGFromString, util: { groupSVGElements } } = require('fabric').fabric
 const { Board } = require('chess/dist/board')
 
 const {
@@ -102,7 +102,7 @@ const renderSVG = (board, {
 }
 
 app.get('/:fen.jpeg', (req, res) => {
-  console.time('gen time')
+  // TODO: add Validation?
   const {
     rotate = 0,
     arrows = [],
@@ -118,47 +118,43 @@ app.get('/:fen.jpeg', (req, res) => {
     w_cell_color: wCellColor = W_CELL_COLOR,
     board_padding: boardPadding = BOARD_PADDING,
   } = req.query
-  const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
+  // TODO: default fen?
+  const { fen } = req.params // = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR'
 
   const marks = marksList.split(',')
   const whiteBottom = !!Number(rotate)
 
   res.contentType('image/jpeg')
-
-  const svg = renderSVG(Board.load(fen), {
-    marks,
-    arrows,
-    bgColor,
-    marksSize,
-    textColor,
-    crossColor,
-    marksColor,
-    squareSize,
-    bCellColor,
-    wCellColor,
-    whiteBottom,
-    boardPadding,
-  })
-
-  const canvas = new StaticCanvas('c', {
-    width: boardSize,
-    height: boardSize,
-  })
-
-  loadSVGFromString(svg, (objects, info) => {
-    const ctx = canvas.getContext('2d')
-    const scaleX = info.width ? (boardSize / info.width) : 1
-    const scaleY = info.height ? (boardSize / info.height) : 1
-
-    ctx.scale(scaleX, scaleY)
-
-    const obj = groupSVGElements(objects, info)
-
-    canvas.add(obj)
-    canvas.renderAll()
-    canvas.createJPEGStream().pipe(res)
-    console.timeEnd('gen time')
-  })
+  let svg
+  try {
+    svg = renderSVG(Board.load(fen), {
+      marks,
+      arrows,
+      bgColor,
+      marksSize,
+      textColor,
+      crossColor,
+      marksColor,
+      squareSize,
+      bCellColor,
+      wCellColor,
+      whiteBottom,
+      boardPadding,
+    })
+  } catch (error) {
+    console.error('Error while svg generation', error)
+    res.send('error')
+    return
+  }
+  try {
+    sharp(Buffer.from(svg))
+      .resize(Number(boardSize))
+      .jpeg()
+      .pipe(res)
+  } catch (error) {
+    console.error('Error while svg rendering', error)
+    res.send('error')
+  }
 })
 
-app.listen(3002)
+app.listen(process.env.APP_PORT)
