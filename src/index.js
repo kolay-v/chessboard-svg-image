@@ -106,9 +106,9 @@ const renderSVG = (board, {
   }
 
   return stubSvg
-    .split('{{fullWidth}}').join(squareSize * 8 + boardPadding * 2)
-    .split('{{bg}}').join(bgColor)
-    .split('{{board}}').join(svgElements.join(''))
+    .replaceAll('{{fullWidth}}', String(squareSize * 8 + boardPadding * 2))
+    .replaceAll('{{bg}}', bgColor)
+    .replaceAll('{{board}}', svgElements.join(''))
 }
 
 app.get('/:fen.jpg', (req, res) => {
@@ -140,7 +140,7 @@ app.get('/:fen.jpg', (req, res) => {
 
   let svg
   try {
-    const svg = renderSVG(Board.load(fen), {
+    svg = renderSVG(Board.load(fen), {
       marks,
       scale,
       arrows,
@@ -172,6 +172,7 @@ app.get('/:fen.jpg', (req, res) => {
       console.error('Error while svg rendering', error)
       res.send('error')
     }
+    return
   }
 
   res.contentType('text/html')
