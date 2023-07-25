@@ -1,7 +1,7 @@
 require('dotenv').config()
 const fs = require('fs')
 const express = require('express')
-const { StaticCanvas, loadSVGFromString, util: { groupSVGElements } } = require('fabric').fabric
+const sharp = require('sharp')
 const { Board } = require('chess/dist/board')
 
 const { APP_PORT } = process.env
@@ -112,6 +112,7 @@ const renderSVG = (board, {
 }
 
 app.get('/:fen.jpg', (req, res) => {
+  // TODO: add Validation?
   const {
     debug = 0,
     rotate = 0,
@@ -126,7 +127,8 @@ app.get('/:fen.jpg', (req, res) => {
     b_cell_color: bCellColor = B_CELL_COLOR,
     w_cell_color: wCellColor = W_CELL_COLOR,
   } = req.query
-  const { fen = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR' } = req.params
+  // TODO: default fen?
+  const { fen } = req.params // = 'rnbkqbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBKQBNR'
 
   const paddingPart = 3
   const boardCoof = 8 * paddingPart + 2
@@ -136,45 +138,40 @@ app.get('/:fen.jpg', (req, res) => {
   const marks = marksList.split(',')
   const whiteBottom = !Number(rotate)
 
-  const svg = renderSVG(Board.load(fen), {
-    marks,
-    scale,
-    arrows,
-    bgColor,
-    marksSize,
-    textColor,
-    crossColor,
-    marksColor,
-    squareSize,
-    bCellColor,
-    wCellColor,
-    whiteBottom,
-    boardPadding,
-  })
+  let svg
+  try {
+    const svg = renderSVG(Board.load(fen), {
+      marks,
+      scale,
+      arrows,
+      bgColor,
+      marksSize,
+      textColor,
+      crossColor,
+      marksColor,
+      squareSize,
+      bCellColor,
+      wCellColor,
+      whiteBottom,
+      boardPadding,
+    })
+  } catch (error) {
+    console.error('Error while svg generation', error)
+    res.send('error')
+    return
+  }
 
   if (!Number(debug)) {
     res.contentType('image/jpeg')
-
-    const canvas = new StaticCanvas('c', {
-      width: boardSize,
-      height: boardSize,
-    })
-
-    loadSVGFromString(svg, (objects, info) => {
-      const ctx = canvas.getContext('2d')
-      const scaleX = info.width ? (boardSize / info.width) : 1
-      const scaleY = info.height ? (boardSize / info.height) : 1
-
-      ctx.scale(scaleX, scaleY)
-
-      const obj = groupSVGElements(objects, info)
-
-      canvas.add(obj)
-      canvas.renderAll()
-      canvas.createJPEGStream().pipe(res)
-    })
-
-    return true
+    try {
+      sharp(Buffer.from(svg))
+        .resize(Number(boardSize))
+        .jpeg()
+        .pipe(res)
+    } catch (error) {
+      console.error('Error while svg rendering', error)
+      res.send('error')
+    }
   }
 
   res.contentType('text/html')
