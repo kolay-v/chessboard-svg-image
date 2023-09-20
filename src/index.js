@@ -116,7 +116,7 @@ app.get('/:fen.jpg', (req, res) => {
   const {
     debug = 0,
     rotate = 0,
-    arrows = [],
+    arrows: arrowsList = '',
     marks: marksList = '',
     bg_color: bgColor = BG_COLOR,
     board_size: boardSize = BOARD_SIZE,
@@ -135,6 +135,7 @@ app.get('/:fen.jpg', (req, res) => {
   const boardPadding = boardSize / boardCoof
   const squareSize = boardPadding * paddingPart
   const scale = boardSize / (boardCoof * 15)
+  const arrows = arrowsList.split(',')
   const marks = marksList.split(',')
   const whiteBottom = !Number(rotate)
 
