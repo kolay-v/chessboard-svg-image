@@ -91,12 +91,13 @@ const renderSVG = (board, {
   if (arrows.length > 0) {
     for (let i = 0; i < arrows.length; i += 1) {
       const arrow = arrows[i].match(
-        /(?<fromFile>[a-h])(?<fromRank>\d)(?<toFile>[a-h])(?<toRank>\d)(?<color>[0-9a-f]{3,8})?/,
+        /(?<fromFile>[a-h])(?<fromRank>\d)(?<toFile>[a-h])(?<toRank>\d)(?<color>[0-9a-f]{3,8})?(?<knight>k)?/,
       )
 
       if (arrow) {
         svgElements.push(makeArrow({
           ...arrow.groups,
+          knight: arrow.groups.knight != null,
           squareSize,
           whiteBottom,
           boardPadding,

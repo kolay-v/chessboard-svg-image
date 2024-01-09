@@ -55,6 +55,7 @@ const makeArrow = ({
   toFile,
   toRank,
   color = '00308880',
+  knight,
   squareSize,
   whiteBottom,
   boardPadding,
@@ -73,34 +74,75 @@ const makeArrow = ({
   const toY = (7.5 - toRank + 1) * squareSize + boardPadding
   const dx = toX - fromX
   const dy = toY - fromY
+  // from tail
+  // to head
 
-  const hypot = Math.hypot(dx, dy)
+  let angle = Math.atan2(
+    fromIdx - toIdx,
+    fromIdx - toIdx,
+  ) * (180 / Math.PI)
+  if (whiteBottom) {
+    angle = 180 - angle
+  }
+  let svgTransform = `rotate(${angle},${fromX},${fromY})`
+  let arrowPoints
 
-  const shaftX = toX - dx * (squareSize * 0.1 + squareSize * 0.75) / hypot
-  const shaftY = toY - dy * (squareSize * 0.1 + squareSize * 0.75) / hypot
-  const tipX = toX - dx * squareSize * 0.1 / hypot
-  const tipY = toY - dy * squareSize * 0.1 / hypot
+  const lineWidthOffset = 0.1 * squareSize
+  const markerOffset = 0.35 * squareSize
+  const markerSize = 0.5 * squareSize
+  if (knight) {
+    const adx = Math.abs(dx)
+    const ady = Math.abs(dy)
+    arrowPoints = [
+      [fromX + lineWidthOffset, fromY + markerOffset],
+      [fromX - lineWidthOffset, fromY + markerOffset],
+      [fromX - lineWidthOffset, fromY + ady + lineWidthOffset],
+      [fromX + adx - markerOffset, fromY + ady + lineWidthOffset],
+      [
+        fromX + adx - markerOffset,
+        fromY + ady + markerSize / 2,
+      ],
+      [fromX + adx, fromY + ady],
+      [
+        fromX + adx - markerOffset,
+        fromY + ady - markerSize / 2,
+      ],
+      [fromX + adx - markerOffset, fromY + ady - lineWidthOffset],
+      [fromX + lineWidthOffset, fromY + ady - lineWidthOffset],
+    ]
 
-  svgElements.push(`<line
-  x1="${fromX}"
-  y1="${fromY}"
-  x2="${shaftX}"
-  y2="${shaftY}"
-  stroke-width="${squareSize * 0.2}"
-  stroke="#${color}"
-></line>`)
+    if (dx < 0 && dy > 0) {
+      svgTransform = `translate(${fromX * 2},0) scale(-1,1)`
+    } else if (dx < 0 && dy < 0) {
+      svgTransform = `rotate(180,${fromX},${fromY})`
+    } else if (dx > 0 && dy > 0) {
+      svgTransform = (
+        `translate(${fromX * 2},${fromY * 2}) scale(-1,  -1) rotate({180},${fromX},${fromY})`
+      )
+    } else {
+      svgTransform = `translate(0,${fromY * 2}) scale(1,  -1) `
+    }
+  } else {
+    const hypot = Math.hypot(dx, dy)
 
-  const coof = 0.5 * squareSize * 0.75 / hypot
-  const marker = [
-    [tipX, tipY],
-    [shaftX + dy * coof, shaftY - dx * coof],
-    [shaftX - dy * coof, shaftY + dx * coof],
-  ]
-
+    arrowPoints = [
+      [fromX + lineWidthOffset, fromY + markerOffset],
+      [fromX - lineWidthOffset, fromY + markerOffset],
+      [fromX - lineWidthOffset, fromY + hypot - markerOffset],
+      [
+        fromX - markerSize / 2,
+        fromY + hypot - markerOffset,
+      ],
+      [fromX, fromY + hypot],
+      [fromX + markerSize / 2, fromY + hypot - markerOffset],
+      [fromX + lineWidthOffset, fromY + hypot - markerOffset],
+    ]
+  }
   svgElements.push(`<polygon
-  points="${marker.map(([x, y]) => `${x},${y}`).join(' ')}"
-  fill="#${color}"
-></polygon>`)
+    points="${arrowPoints.map(([x, y]) => `${x},${y}`).join(' ')}"
+    transform="${svgTransform}"
+    fill="#${color}"
+  ></polygon>`)
 
   return svgElements.join('')
 }
