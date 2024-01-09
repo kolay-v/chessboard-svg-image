@@ -54,7 +54,7 @@ const makeArrow = ({
   fromRank,
   toFile,
   toRank,
-  color = '00ff0080',
+  color = '00308880',
   squareSize,
   whiteBottom,
   boardPadding,
