@@ -44,12 +44,19 @@ const renderSVG = (board, {
   squareSize,
   whiteBottom,
   boardPadding,
+  selected
 }) => {
   const svgElements = []
 
   for (let i = 0; i < board.squares.length; i += 1) {
     const { file, rank, piece } = board.squares[i]
-    const color = (FILES.indexOf(file) + rank) % 2 ? bCellColor : wCellColor
+    let color = wCellColor
+    if ((FILES.indexOf(file) + rank) % 2) {
+      color = bCellColor
+    }
+    if (selected === `${file}${rank}`) {
+      color = marksColor
+    }
     const fileNumber = whiteBottom ? FILES.indexOf(file) : 7 - FILES.indexOf(file)
     const rankNumber = !whiteBottom ? rank - 1 : 8 - rank
     const x = fileNumber * squareSize + boardPadding
@@ -119,6 +126,7 @@ app.get('/:fen.jpg', (req, res) => {
     rotate = 0,
     arrows: arrowsList = '',
     marks: marksList = '',
+    selected = '',
     bg_color: bgColor = BG_COLOR,
     board_size: boardSize = BOARD_SIZE,
     marks_size: marksSize = MARKS_SIZE,
@@ -156,6 +164,7 @@ app.get('/:fen.jpg', (req, res) => {
       wCellColor,
       whiteBottom,
       boardPadding,
+      selected
     })
   } catch (error) {
     console.error('Error while svg generation', error)
