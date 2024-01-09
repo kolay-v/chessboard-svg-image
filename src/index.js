@@ -44,7 +44,7 @@ const renderSVG = (board, {
   squareSize,
   whiteBottom,
   boardPadding,
-  selected
+  selected,
 }) => {
   const svgElements = []
 
@@ -164,7 +164,7 @@ app.get('/:fen.jpg', (req, res) => {
       wCellColor,
       whiteBottom,
       boardPadding,
-      selected
+      selected,
     })
   } catch (error) {
     console.error('Error while svg generation', error)
