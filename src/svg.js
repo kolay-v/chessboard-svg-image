@@ -81,9 +81,6 @@ const makeArrow = ({
     fromIdx - toIdx,
     fromIdx - toIdx,
   ) * (180 / Math.PI)
-  if (whiteBottom) {
-    angle = 180 - angle
-  }
   let svgTransform = `rotate(${angle},${fromX},${fromY})`
   let arrowPoints
 
