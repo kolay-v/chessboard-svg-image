@@ -123,7 +123,6 @@ const makeArrow = ({
     }
   } else {
     const hypot = Math.hypot(dx, dy)
-console.log(hypot)
     arrowPoints = [
       [fromX + lineWidthOffset, fromY + markerOffset],
       [fromX - lineWidthOffset, fromY + markerOffset],
