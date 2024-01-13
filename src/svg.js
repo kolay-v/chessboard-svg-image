@@ -60,6 +60,8 @@ const makeArrow = ({
   whiteBottom,
   boardPadding,
 }) => {
+  fromRank = Number(fromRank)
+  toRank = Number(toRank)
   fromRank = whiteBottom ? fromRank : 9 - fromRank
   toRank = whiteBottom ? toRank : 9 - toRank
   const letters = whiteBottom ? FILES : FILES.split('').reverse().join('')
@@ -79,7 +81,7 @@ const makeArrow = ({
 
   let angle = Math.atan2(
     fromIdx - toIdx,
-    fromIdx - toIdx,
+    fromRank - toRank,
   ) * (180 / Math.PI)
   let svgTransform = `rotate(${angle},${fromX},${fromY})`
   let arrowPoints
@@ -121,7 +123,7 @@ const makeArrow = ({
     }
   } else {
     const hypot = Math.hypot(dx, dy)
-
+console.log(hypot)
     arrowPoints = [
       [fromX + lineWidthOffset, fromY + markerOffset],
       [fromX - lineWidthOffset, fromY + markerOffset],
